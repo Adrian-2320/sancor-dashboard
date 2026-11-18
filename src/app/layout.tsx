@@ -3,9 +3,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Dashboard Comercial | Gerencia Zonal",
-  description:
-    "Tablero de gestión comercial: ventas, objetivos, bajas y prospectos del equipo de asesores.",
+  title: "Tablero de Ventas | Artexa",
+  description: "Ventas de prepagas por asesor: planes, cápitas, formas de pago y proyección.",
 };
 
 export const viewport: Viewport = {

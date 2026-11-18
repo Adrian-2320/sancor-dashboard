@@ -30,7 +30,7 @@ export function FormularioLogin({ volver }: { volver: string }) {
         return;
       }
 
-      router.replace(volver || "/resumen");
+      router.replace(volver || "/tablero");
       router.refresh();
     } catch {
       setError("No se pudo conectar con el servidor. Revisá tu conexión.");
