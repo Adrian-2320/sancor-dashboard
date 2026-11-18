@@ -1,57 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import type { Sesion } from "@/lib/types";
 
-import {
-  IconoBajas,
-  IconoCargar,
-  IconoCerrar,
-  IconoConfiguracion,
-  IconoEvolucion,
-  IconoMenu,
-  IconoObjetivo,
-  IconoProspectos,
-  IconoRanking,
-  IconoResumen,
-  IconoSalir,
-} from "./iconos";
+import { IconoCerrar, IconoMenu, IconoResumen, IconoSalir } from "./iconos";
 
-type ItemNav = {
-  href: string;
-  etiqueta: string;
-  icono: (props: { className?: string }) => React.ReactElement;
-  soloGerente?: boolean;
-};
+export type EnlaceAsesor = { nombre: string; slug: string; capitas: number };
 
-const NAVEGACION: ItemNav[] = [
-  { href: "/resumen", etiqueta: "Resumen", icono: IconoResumen },
-  { href: "/objetivos", etiqueta: "Cumplimiento", icono: IconoObjetivo },
-  { href: "/evolucion", etiqueta: "Evolución", icono: IconoEvolucion },
-  { href: "/ranking", etiqueta: "Ranking", icono: IconoRanking, soloGerente: true },
-  { href: "/bajas", etiqueta: "Bajas", icono: IconoBajas },
-  { href: "/prospectos", etiqueta: "Prospectos", icono: IconoProspectos },
-  { href: "/cargar", etiqueta: "Cargar datos", icono: IconoCargar },
-  { href: "/configuracion", etiqueta: "Configuración", icono: IconoConfiguracion, soloGerente: true },
-];
-
-export function Shell({ sesion, children }: { sesion: Sesion; children: React.ReactNode }) {
+export function Shell({
+  sesion,
+  asesores,
+  children,
+}: {
+  sesion: Sesion;
+  asesores: EnlaceAsesor[];
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const [saliendo, setSaliendo] = useState(false);
 
-  // Al navegar, el menú lateral del celular se cierra solo.
   useEffect(() => {
     setAbierto(false);
   }, [pathname]);
-
-  const consulta = searchParams.toString();
-  const items = NAVEGACION.filter((item) => !item.soloGerente || sesion.rol === "gerente");
 
   async function salir() {
     setSaliendo(true);
@@ -60,21 +35,20 @@ export function Shell({ sesion, children }: { sesion: Sesion; children: React.Re
     router.refresh();
   }
 
-  const iniciales = (sesion.nombre || sesion.usuario)
-    .split(" ")
-    .slice(0, 2)
-    .map((parte) => parte.charAt(0).toUpperCase())
-    .join("");
+  const claseEnlace = (activo: boolean) =>
+    `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+      activo ? "bg-marino-700 font-semibold text-white" : "text-marino-100 hover:bg-marino-800 hover:text-white"
+    }`;
 
   const lateral = (
     <div className="flex h-full flex-col bg-marino-900 text-marino-100">
       <div className="flex items-center gap-3 px-5 py-5">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-naranja-600 text-sm font-bold text-white">
-          GZ
+          A
         </div>
         <div className="leading-tight">
-          <p className="text-sm font-semibold text-white">Dashboard Comercial</p>
-          <p className="text-[11px] text-marino-300">Gerencia Zonal</p>
+          <p className="text-sm font-semibold text-white">Tablero de Ventas</p>
+          <p className="text-[11px] text-marino-300">Artexa · Prepagas</p>
         </div>
         <button
           type="button"
@@ -87,39 +61,26 @@ export function Shell({ sesion, children }: { sesion: Sesion; children: React.Re
       </div>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-4">
-        {items.map((item) => {
-          const activo = pathname === item.href;
-          const Icono = item.icono;
+        {sesion.rol === "gerente" && (
+          <Link href="/tablero" className={claseEnlace(pathname === "/tablero")}>
+            <IconoResumen />
+            Tablero general
+          </Link>
+        )}
+        <p className="px-3 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-wider text-marino-300">Asesores</p>
+        {asesores.map((a) => {
+          const href = `/asesor/${a.slug}`;
           return (
-            <Link
-              key={item.href}
-              href={consulta ? `${item.href}?${consulta}` : item.href}
-              aria-current={activo ? "page" : undefined}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
-                activo
-                  ? "bg-marino-700 font-semibold text-white"
-                  : "text-marino-100 hover:bg-marino-800 hover:text-white"
-              }`}
-            >
-              <Icono />
-              {item.etiqueta}
+            <Link key={a.slug} href={href} className={claseEnlace(pathname === href)}>
+              <span className="truncate">{a.nombre}</span>
+              <span className="tabular ml-auto text-[11px] text-marino-300">{a.capitas}</span>
             </Link>
           );
         })}
       </nav>
 
       <div className="border-t border-marino-800 px-4 py-4">
-        <div className="mb-3 flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-marino-700 text-xs font-semibold text-white">
-            {iniciales || "US"}
-          </div>
-          <div className="min-w-0 leading-tight">
-            <p className="truncate text-sm font-medium text-white">{sesion.nombre}</p>
-            <p className="text-[11px] capitalize text-marino-300">
-              {sesion.rol === "gerente" ? "Gerente zonal" : `Asesor · ${sesion.asesor}`}
-            </p>
-          </div>
-        </div>
+        <p className="mb-3 truncate text-sm font-medium text-white">{sesion.nombre}</p>
         <button
           type="button"
           onClick={salir}
@@ -141,30 +102,18 @@ export function Shell({ sesion, children }: { sesion: Sesion; children: React.Re
 
       {abierto && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <button
-            type="button"
-            aria-label="Cerrar menú"
-            className="absolute inset-0 bg-marino-950/60"
-            onClick={() => setAbierto(false)}
-          />
+          <button type="button" aria-label="Cerrar menú" className="absolute inset-0 bg-marino-950/60" onClick={() => setAbierto(false)} />
           <div className="relative h-full w-64 max-w-[80vw] shadow-xl">{lateral}</div>
         </div>
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-borde bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
-          <button
-            type="button"
-            onClick={() => setAbierto(true)}
-            className="rounded-md p-1.5 text-tinta hover:bg-lienzo"
-            aria-label="Abrir menú"
-          >
+          <button type="button" onClick={() => setAbierto(true)} className="rounded-md p-1.5 text-tinta hover:bg-lienzo" aria-label="Abrir menú">
             <IconoMenu />
           </button>
-          <span className="text-sm font-semibold">Dashboard Comercial</span>
-          <span className="ml-auto text-xs text-tinta-suave">{sesion.nombre}</span>
+          <span className="text-sm font-semibold">Tablero de Ventas</span>
         </header>
-
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
       </div>
     </div>
